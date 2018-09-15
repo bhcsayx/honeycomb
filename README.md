@@ -20,7 +20,7 @@ Libevent >=1.1,Honeyd >=0.7
 
 2.Usage
 
-honeycomb <pcap directory>
+honeycomb pcap directory
   
 P.S: bugs in hc_string_alg_lcs():
 *** Error in `honeycomb': munmap_chunk(): invalid pointer: 0x00007ffc3ffd5210 ***
