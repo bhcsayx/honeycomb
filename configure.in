@@ -1,0 +1,180 @@
+# Process this file with autoconf to produce a configure script.
+AC_INIT
+AC_CONFIG_SRCDIR(src/honeycomb.c)
+AC_CANONICAL_SYSTEM
+AM_INIT_AUTOMAKE(honeycomb, 0.7)
+AM_CONFIG_HEADER(config.h)
+
+dnl Commands for funky shtool output:
+BLD_ON=`./shtool echo -n -e %B`
+BLD_OFF=`./shtool echo -n -e %b`
+
+AC_PROG_LIBTOOL
+AC_PROG_CC
+AC_PROG_INSTALL
+
+
+dnl ###################################################
+dnl # Check for libstree
+dnl ###################################################
+AC_ARG_WITH(libstree,
+[  --with-libstree=DIR      use libstree installation at DIR],
+[ CPPFLAGS="$CPPFLAGS -I$withval/include"
+  LIBS="-L$withval/lib $LIBS"
+  ck_libstree="$withval"
+])
+
+AC_CHECK_HEADER(libstree.h, ck_stree_found="header")
+if test ! "x$ck_stree_found" = "xheader"; then
+     AC_ERROR(libstree not found.)
+fi
+
+AC_CHECK_LIB(stree, main, ck_stree_found="lib")
+if test ! "x$ck_stree_found" = "xlib"; then
+     AC_ERROR(libstree not found.)
+fi
+
+
+dnl ###################################################
+dnl # Check for Honeyd, and use output of --include-dir
+dnl # to figure out where to get the header files from.
+dnl ###################################################
+AC_ARG_WITH(honeyd,
+[  --with-honeyd=FILE      use given honeyd],
+[ honeyd="$withval" ],
+[ AC_PATH_PROG([honeyd], [honeyd], [no]) ]
+)
+
+dnl Get the output honeyd creates for the --include-dir
+dnl option. This might now work, in which case we get the
+dnl error message, whose contents are checked below.
+dnl
+dnl Note: the test has become more complicated for
+dnl recent honeyds because it now always prints version
+dnl information to stderr -- where the "unrecognized option"
+dnl error message also ends up :(
+dnl
+if test -x "$honeyd"; then
+     hd_includedir=`$honeyd --include-dir 2>/dev/null`
+     hd_includedir_err=`$honeyd --include-dir 2>&1`
+
+dnl Need to check now if it's a honeyd that supports plugins.
+dnl We check whether --include-dir was recognized:
+     AC_MSG_CHECKING([if honeyd knows --include-dir option])
+     if test `echo $hd_includedir_err | sed -e '/unrecognize/=;d'`; then
+          AC_MSG_RESULT(no)
+          AC_ERROR(this honeyd does not support plugins.)
+     fi
+     AC_MSG_RESULT(yes)
+else
+     AC_ERROR(honeyd not found.)
+fi
+
+AC_SUBST(hd_includedir)
+
+
+dnl ###################################################
+dnl # Check for dnet, either as libdnet or libdumbnet
+dnl ###################################################
+AC_ARG_WITH(libdnet,
+[  --with-libdnet=DIR      use libdnet in DIR],
+[ dnetconfig="$withval/dnet-config" ],
+[ AC_PATH_PROG([dnetconfig], [dnet-config], [no]) ]
+)
+
+if test -x "$dnetconfig"; then
+     dnet_cflags="`$dnetconfig --cflags`"
+     dnet_libs="`$dnetconfig --libs`"
+else
+     AC_ERROR(dnet-config not found.)
+fi
+
+AC_SUBST(dnet_cflags)
+AC_SUBST(dnet_libs)
+
+
+dnl ###################################################
+dnl # Check for libevent
+dnl ###################################################
+AC_ARG_WITH(libevent,
+[  --with-libevent=DIR      use libevent installation at DIR],
+[ CPPFLAGS="$CPPFLAGS -I$withval/include"
+  LIBS="-L$withval/lib $LIBS"
+  ck_libevent="$withval"
+])
+
+AC_CHECK_HEADER(event.h, ck_event_found="header")
+if test ! "x$ck_event_found" = "xheader"; then
+     AC_ERROR(libevent not found.)
+fi
+
+AC_CHECK_LIB(event, main, ck_event_found="lib")
+if test ! "x$ck_event_found" = "xlib"; then
+     AC_ERROR(libevent not found.)
+fi
+
+
+dnl We still need to check whether it's dnet or dumbnet as
+dnl for example on Debian. We test by looking at the content
+dnl of DNETLIB and derive from the library name what version
+dnl we're dealing with. If we find a libdumbnet, we prefix
+dnl compat/libdnet to our inclusion path. It provides a dnet.h
+dnl that transparently includes dumbnet.h for those systems. --CPK.
+AC_MSG_CHECKING([whether libdnet is a libdumbnet])
+if test `echo $dnet_libs | sed -e '/dumb/=;d'`; then
+     AC_MSG_RESULT(yes)
+     AC_DEFINE(HAVE_DUMBNET, 1,
+		[Define if our libdnet is a libdumbnet])
+else
+     AC_MSG_RESULT(no)
+fi
+
+
+dnl ###################################################
+dnl # Debugging enable/disable switch
+dnl ###################################################
+AC_ARG_ENABLE(debugging,
+	      AC_HELP_STRING([--enable-debugging], [Use debugging macros to produce helpful output (disabled by default)]),
+	      debugging="yes",
+	      debugging="no")
+
+if test x$debugging = xyes; then
+  AC_DEFINE_UNQUOTED(HONEYD_DEBUG, 1, [Enable debugging output])
+fi
+
+
+dnl ###################################################
+dnl # Generate files
+dnl ###################################################
+AC_CONFIG_FILES([
+Makefile
+src/Makefile
+])
+AC_OUTPUT
+
+
+dnl ###################################################
+dnl # Print summary
+dnl ###################################################
+echo
+echo "             "${BLD_ON}"Honeycomb Configuration Summary"${BLD_OFF}
+echo "========================================================"
+echo
+echo "  Honeyd used:        "${BLD_ON}"$honeyd"${BLD_OFF}
+echo "  Honeyd headers:     "${BLD_ON}"$hd_includedir"${BLD_OFF}
+echo "  dnet-config used:   "${BLD_ON}"$dnetconfig"${BLD_OFF}
+if test "$ck_libevent"; then
+echo "  libevent location:  "${BLD_ON}"$ck_libevent"${BLD_OFF}
+fi
+if test "$ck_libstree"; then
+echo "  libstree location:  "${BLD_ON}"$ck_libstree"${BLD_OFF}
+fi
+echo "  Debugging enabled:  "${BLD_ON}"$debugging"${BLD_OFF}
+echo
+echo "  Setup finished. Now run:"
+echo
+echo "  $ "${BLD_ON}"make"${BLD_OFF}
+echo "  # "${BLD_ON}"make install"${BLD_OFF}
+echo
+echo "  (or use "${BLD_ON}"gmake"${BLD_OFF}" if it's not GNU make)"
+echo

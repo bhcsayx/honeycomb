@@ -1,0 +1,21 @@
+Honeycomb Changelog
+========================================================================
+
+Wed Jun  9 10:46:47 PDT 2004
+
+- Changed test for working honeyd --include-dir option to ignore the
+stderr output that newer honeyds generate. Pointed out by Georgios
+Portokalidis.
+- Released 0.6
+
+------------------------------------------------------------------------
+
+Older stuff:
+
+- Added ACK and SEQ numbers to Snort printer
+- Two separate connection hashtables
+- Signature correlation
+- Detected signatures are printed out in regular intervals,
+  and can be improved upon instead duplicated.
+- valgrinding!
+- TCP header flag matches are properly detected among packets.

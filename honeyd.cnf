@@ -1,0 +1,110 @@
+# Honeycomb plugin configuration
+#
+# Add this to your honeyd configuration file and tweak as you see fit!
+# ____________________________________________________________________
+
+# Whether to run the plugin (1) or not (0)
+option honeycomb enable                  1
+
+# What Snort alert category we use for our signatures
+option honeycomb snort_alert_class       alert
+
+# The name of the output log file to which we log generated signatures
+option honeycomb sig_output_file         /tmp/honeycomb.log
+
+
+
+# How many IP packets we keep in mind and search
+# for matching data. 
+option honeycomb ip_backlog              100
+
+
+
+# How many attempted UDP connections we maintain state for at any one time
+option honeycomb udp_conns_max           1000
+
+# How many answered UDP connections we maintain state for at any
+# one time. Once a connection is answered, it is moved to a different
+# hashtable. We therefore keep state for udp_conns_max attempted
+# connections PLUS udp_dataconns_max answered ones.
+option honeycomb udp_dataconns_max       1000
+
+# The maximum number of bytes flowing in a single direction without
+# any payload coming the other way during the UDP dialog that we
+# store. More data going in one direction without any real data
+# going the other way is not stored, as we're currently not looking
+# for data there.
+#
+# This is also the maximum string size the longest common substring
+# algorithm in libstree needs to deal with, so we don't make this
+# too high to avoid performance hits.
+option honeycomb udp_max_msg_size        5000
+
+# We stop hunting for patterns at some point into a UDP exchange.
+# The following defines the number of total bytes inbound before
+# we stop caring.
+option honeycomb udp_max_bytes           10000
+
+# The minimum pattern length we require before we consider
+# a string match in UDP payload meaningful:
+option honeycomb udp_pattern_minlen      5
+
+
+
+# How many initiated TCP connections we maintain state for at any one time.
+option honeycomb tcp_conns_max           65000
+
+# How many established TCP connections we maintain state for at any
+# one time. Once a connection is established, it is moved to a different
+# hashtable. We therefore keep state for tcp_conns_max unestablished
+# connections PLUS tcp_dataconns_max established ones.
+option honeycomb tcp_dataconns_max       1000
+
+# The maximum number of bytes flowing in a single direction without
+# any payload coming the other way during the TCP dialog that we
+# store. More data going in one direction without any real data
+# going the other way is not stored, as we're currently not looking
+# for data there.
+#
+# This is also the maximum string size the longest common substring
+# algorithm in libstree needs to deal with, so we don't make this
+# too high to avoid performance hits.
+option honeycomb tcp_max_msg_size        5000
+
+# We stop hunting for patterns at some point into a TCP dialogue.
+# The following defines the number of total bytes inbound before
+# we stop caring.
+option honeycomb tcp_max_bytes           10000
+
+# For TCP, we also buffer the incoming payloads in one single buffer
+# directly. This defines the size of that buffer.
+option honeycomb tcp_max_buffering_in    1000
+
+# The minimum pattern length we require before we consider
+# a string match in TCP payload meaningful:
+option honeycomb tcp_pattern_minlen      5
+
+
+
+# The number of slots in the hashtables:
+option honeycomb conns_hash_slots        199
+
+# The connection hashtables are periodically checked for dead connections
+# we're no longer interested in (this doesn't automatically mean terminated
+# connections, as we need to keep connections around in order to be able to
+# have something to compare new ones against!). This setting defines
+# the interval in seconds between cleanups.
+option honeycomb conns_hash_cleanup_interval 10
+
+
+
+# How many generated signatures we keep around before we
+# start to forget some.
+option honeycomb sighist_max_size        200
+
+# Detected signatures are kept in a history structure and reported
+# periodically. This settings defines how long to wait between those
+# reports. During the waiting period, existing signatures can be
+# improved upon through new traffic flows.
+option honeycomb sighist_interval        10
+

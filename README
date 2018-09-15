@@ -1,0 +1,62 @@
+
+                       H  O  N  E  Y  C  O  M  B
+
+
+                    Honeyd NIDS Signature Generator
+                               -- v0.4 --
+
+          Christian Kreibich <christian.kreibich@cl.cam.ac.uk>
+________________________________________________________________________
+
+  Honeycomb is a system that creates signatures for network intrusion
+  detection systems on traffic going in and out of a honeyd honeypot
+  in real-time. It uses protocol analysis and longest-common substring
+  detection techniques to recognize traffic patterns. The signatures
+  can be reported in various formats, currently only a pseudo-Snort
+  output is supported (pseudo because Snort doesn't support lists of
+  port numbers -- shame on you). In the near future Bro will be the
+  suggested signature output mode as it's much more flexible.
+
+  To use Honeycomb, you need at least version 0.5c of honeyd. Steps to
+  get Honeycomb running:
+
+  - Make sure you have an existing installation of honeyd.
+
+  - Make sure you have libstree installed, available at
+
+    http://www.cl.cam.ac.uk/~cpk25/libstree-0.2.0.tar.gz
+
+    This is the library that contains the string handling algorithms
+    necessary to build Honeycomb.
+
+  - Build the Honeycomb plugin library, using the usual
+   
+      ./configure [options]; make; make install
+
+    approach. Look at ./configure --help for options,
+    --enable-debugging in particular may be helpful.
+
+  - After installation, rebuild honeyd, including honeycomb in the 
+    list of plugins (i.e., pass --with-plugins=honeycomb,... plus
+    any other honeyd plugins to honeyd's configure script).
+
+  - Configure Honeycomb: look at the options in honeyd.cnf that come
+    with the Honeycomb package. Add these options to your honeyd
+    configuration file and adjust them as you see fit.
+
+  - That's basically it; if you've built Honeycomb with
+    --enable-debugging you should see a line like the following when
+    honeyd starts up:
+    
+      honeycomb.c/72: Initializing Honeycomb <version>
+
+  - Signatures are reported periodically, check the file that you
+    have configured the signatures to be dumped to. By default, this
+    file is /tmp/honeycomb.log.
+
+  - Bug reports and feedback are appreciated, send them to me at the
+    email address given above.
+
+------------------------------------------------------------------------
+  Yet another SRG production -- http://www.cl.cam.ac.uk/Research/SRG/
+------------------------------------------------------------------------
